@@ -113,7 +113,6 @@ for index in range(0, len(data),2):
 
 
     ground_bounding_rect = getBoundingRect(ground)
-    # flat_bounding_rect = getBoundingRect(flat)
     # drawBoundingRect(ground_bounding_rect, ground)
 
 
@@ -127,15 +126,9 @@ for index in range(0, len(data),2):
         desiredWidth = round( (groundWidth / groundHeight) * desiredHeight)
 
 
-    # if cropW < cropH:
-    #     h = round(w/cropW*cropH)
-    # else:
-    #     w = round(h/cropH*cropW)
-
     crop_resized = cv2.resize(cropped, (w, h), interpolation=cv2.INTER_LINEAR_EXACT)
 
     resized_flat[y:y+h,x:x+w] = crop_resized
-    # cv2.imwrite(f'formatted/{baseName}_flatCrop2.png', cropped)
 
     cv2.imwrite(f'formatted/{baseName}_flat.png', resized_flat)
 
