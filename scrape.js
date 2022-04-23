@@ -1,5 +1,6 @@
 const needle = require('needle');
 const cio = require('cheerio-without-node-native');
+
 const totalWorkers = 100
 
 /**
@@ -45,10 +46,17 @@ async function run(){
     console.log(ips)
     console.log(ips.length)
 
-    console.log = function(d) {
-        log_file.write(util.format(d) + '\n');
-    };
+    // console.log = function(d) {
+    //     log_file.write(util.format(d) + '\n');
+    // };
       
+
+    const base_search = "https://www.google.com/search?q=anime+minimalist&tbm=isch&ved=2ahUKEwiS4uLYpKn3AhW5hXIEHUKLAOAQ2-cCegQIABAA&oq=anime+minimalist&gs_lcp=CgNpbWcQAzIFCAAQgAQyBQgAEIAEMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCAAQgAQ6BwgjEO8DECdQ7ilYkS9gzTJoAnAAeACAASyIAaMBkgEBNJgBAKABAaoBC2d3cy13aXotaW1nwAEB&sclient=img&ei=WHhjYpLWL7mLytMPwpaCgA4&bih=912&biw=2560&safe=images&hl=en"
+    const {body} = await needle('get', base_search)
+    const $ = cio.load(body)
+
+    console.log(body)
+
 }
 
 run()
