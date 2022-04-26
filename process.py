@@ -27,7 +27,7 @@ for index in range(0, len(data),2):
         desiredWidth = round( (groundWidth / groundHeight) * desiredHeight)
 
     ground_resized = cv2.resize(ground, (desiredWidth, desiredHeight), interpolation= cv2.INTER_LINEAR_EXACT)
-    cv2.imwrite(f'formatted/{baseName}.png', ground_resized)
+    cv2.imwrite(f'formatted/normal/{baseName}.png', ground_resized)
     ground = ground_resized
 
     def union(a,b):
@@ -130,7 +130,7 @@ for index in range(0, len(data),2):
 
     resized_flat[y:y+h,x:x+w] = crop_resized
 
-    cv2.imwrite(f'formatted/{baseName}_flat.png', resized_flat)
+    cv2.imwrite(f'formatted/minimal/{baseName}.png', resized_flat)
 
 
 # cv2.waitKey(0)
