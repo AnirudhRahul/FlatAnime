@@ -1,3 +1,4 @@
+from turtle import bgcolor
 import cv2
 import numpy as np
 import glob
@@ -18,17 +19,21 @@ for index in range(0, len(data),2):
     print(baseName, data[index], data[index+1])
 
     groundHeight, groundWidth ,_ = ground.shape
+    flatHeight, flatWidth ,_ = flat.shape
 
-    if groundWidth > groundHeight:
-        desiredWidth = min(groundWidth, 1280)
-        desiredHeight = round( (groundHeight / groundWidth) * desiredWidth)
-    else:
-        desiredHeight = min(groundHeight, 1280)
-        desiredWidth = round( (groundWidth / groundHeight) * desiredHeight)
 
+    desiredHeight = desiredWidth = 1024
+    
     ground_resized = cv2.resize(ground, (desiredWidth, desiredHeight), interpolation= cv2.INTER_LINEAR_EXACT)
-    cv2.imwrite(f'formatted/normal/{baseName}.png', ground_resized)
+    cv2.imwrite(f'formatted/view/{baseName}.png', ground_resized)
     ground = ground_resized
+
+    if abs(flatHeight/flatWidth - groundHeight/groundWidth) < 0.01:
+        flat_resized = cv2.resize(flat, (desiredWidth, desiredHeight), interpolation= cv2.INTER_LINEAR_EXACT)
+        cv2.imwrite(f'formatted/view/{baseName}_flat.png', flat_resized)
+        continue
+
+    print(flatHeight/flatWidth , groundHeight/groundWidth)
 
     def union(a,b):
         x = min(a[0], b[0])
@@ -93,11 +98,19 @@ for index in range(0, len(data),2):
         img = np.copy(img)
         (x,y,w,h) = rect
         img[y:y+h, x:x+w] = (255,255,255)
+        # print(img.shape, rect)
         count = bincount_app(img)
         return count
-
     flat_bounding_rect = getBoundingRect(flat)
+    _, _, fw, fh = flat_bounding_rect
+
+    if fw == flatWidth and fh == flatHeight:
+        flat_resized = cv2.resize(flat, (desiredWidth, desiredHeight), interpolation= cv2.INTER_LINEAR_EXACT)
+        cv2.imwrite(f'formatted/view/{baseName}_flat.png', flat_resized)
+        continue
+
     flat_bg_color = get_bg_color(flat_bounding_rect, flat)
+    # flat_bg_color = (256, 256, 256)
     bg_pixels = np.all(flat[:,:]==np.array(flat_bg_color), axis=2)
     keyed_flat = np.copy(flat)
     keyed_flat[bg_pixels]=(255,255,255)
@@ -130,7 +143,8 @@ for index in range(0, len(data),2):
 
     resized_flat[y:y+h,x:x+w] = crop_resized
 
-    cv2.imwrite(f'formatted/minimal/{baseName}.png', resized_flat)
+    cv2.imwrite(f'formatted/view/{baseName}_flat.png', resized_flat)
+
 
 
 # cv2.waitKey(0)
