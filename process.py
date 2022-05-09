@@ -87,8 +87,11 @@ for index in range(0, len(data),2):
     ground = cv2.imread(data[index],-1)
     flat = cv2.imread(data[index+1])
     baseName = data[index].split('/')[-1].split('.')[0]
+    baseName_flat = data[index+1].split('/')[-1].split('.')[0]
     print(baseName, data[index], data[index+1])
-
+    
+    if not baseName_flat.startswith(baseName):
+        raise "Incorrect file name format" 
     # Reformat ground img if it has alpha channel
     mask = None
     if ground.shape[-1]==4:
@@ -159,5 +162,5 @@ for index in range(0, len(data),2):
     resized_flat = mult_mask(resized_flat, mask)
     ground = mult_mask(ground, mask)
 
-    cv2.imwrite("aligned/{baseName}_flat.png", cv2.resize(resized_flat, (512, 512), interpolation=cv2.INTER_LINEAR_EXACT))
-    cv2.imwrite("aligned/{baseName}.png", cv2.resize(ground, (512, 512), interpolation=cv2.INTER_LINEAR_EXACT))
+    cv2.imwrite(f"aligned/{baseName}_flat.png", cv2.resize(resized_flat, (512, 512), interpolation=cv2.INTER_LINEAR_EXACT))
+    cv2.imwrite(f"aligned/{baseName}.png", cv2.resize(ground, (512, 512), interpolation=cv2.INTER_LINEAR_EXACT))
