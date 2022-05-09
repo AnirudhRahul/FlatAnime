@@ -7,11 +7,17 @@ data = glob.glob("./data/*")
 data.sort()
 
 
+def mult_mask(img, mask):
+    return img*mask[:,:,None]
+
 for index in range(0, len(data),2):
     ground = cv2.imread(data[index],-1)
+    mask = None
     if ground.shape[-1]==4:
-        ground[ground[:,:,-1]==0,:]=0
+        mask = ground[:,:,-1]==0
+        ground[mask,:]=0
         ground = cv2.cvtColor(ground, cv2.COLOR_BGRA2BGR)
+        mask = np.where(mask,0,1)
 
 
     flat = cv2.imread(data[index+1])
@@ -21,19 +27,17 @@ for index in range(0, len(data),2):
     groundHeight, groundWidth ,_ = ground.shape
     flatHeight, flatWidth ,_ = flat.shape
 
+    if mask is None:
+        mask = np.ones((flatHeight, flatWidth))
+
 
     desiredHeight = desiredWidth = 1024
-    
+    mask = cv2.resize(mask, (desiredWidth, desiredHeight), interpolation= cv2.INTER_LINEAR_EXACT)
+
     ground_resized = cv2.resize(ground, (desiredWidth, desiredHeight), interpolation= cv2.INTER_LINEAR_EXACT)
+    ground_resized = mult_mask(ground_resized, mask)
     cv2.imwrite(f'formatted/view/{baseName}.png', ground_resized)
     ground = ground_resized
-
-    if abs(flatHeight/flatWidth - groundHeight/groundWidth) < 0.01:
-        flat_resized = cv2.resize(flat, (desiredWidth, desiredHeight), interpolation= cv2.INTER_LINEAR_EXACT)
-        cv2.imwrite(f'formatted/view/{baseName}_flat.png', flat_resized)
-        continue
-
-    print(flatHeight/flatWidth , groundHeight/groundWidth)
 
     def union(a,b):
         x = min(a[0], b[0])
@@ -51,7 +55,7 @@ for index in range(0, len(data),2):
         return (x, y, w, h)
     def getBoundingRect(img):
 
-        thresh = cv2.Canny(img,0,255)
+        thresh = cv2.Canny(np.uint8(img),0,255)
         # cv2.imshow('edges', thresh)
         contours, _ = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         # drawn = np.copy(img)
@@ -94,29 +98,57 @@ for index in range(0, len(data),2):
         a1D = np.ravel_multi_index(a2D.T, col_range)
         return np.unravel_index(np.bincount(a1D).argmax(), col_range)
 
-    def get_bg_color(rect, img):
+    def get_bg_color(img, rect=(0,0,0,0)):
         img = np.copy(img)
         (x,y,w,h) = rect
         img[y:y+h, x:x+w] = (255,255,255)
         # print(img.shape, rect)
         count = bincount_app(img)
         return count
-    flat_bounding_rect = getBoundingRect(flat)
-    _, _, fw, fh = flat_bounding_rect
 
-    if fw == flatWidth and fh == flatHeight:
+    def show_rect(name, img, rect):
+        (x,y,w,h) = rect
+        cv2.imshow(name, cv2.rectangle(img, (x,y), (x+w, y+h),(255,0,0),5))
+        cv2.waitKey(0)
+        
+    
+    # def remove_bg(img, color):
+    #     color = np.array(list(color))
+    #     # print(color)
+    #     # print(img[:,:])
+    #     img[np.all(img[:,:]==color, axis=2)] = (255,255,255)
+    #     return img
+
+    if abs(flatHeight/flatWidth - groundHeight/groundWidth) < 0.01:
         flat_resized = cv2.resize(flat, (desiredWidth, desiredHeight), interpolation= cv2.INTER_LINEAR_EXACT)
+        flat_resized = mult_mask(flat_resized, mask)
         cv2.imwrite(f'formatted/view/{baseName}_flat.png', flat_resized)
         continue
 
-    flat_bg_color = get_bg_color(flat_bounding_rect, flat)
+    flat_bounding_rect = getBoundingRect(flat)
+    _, _, fw, fh = flat_bounding_rect
+    show_rect("flat", flat, flat_bounding_rect)
+    
+    if fw == flatWidth and fh == flatHeight:
+        flat_resized = cv2.resize(flat, (desiredWidth, desiredHeight), interpolation= cv2.INTER_LINEAR_EXACT)
+        flat_resized = mult_mask(flat_resized, mask)
+        cv2.imwrite(f'formatted/view/{baseName}_flat.png', flat_resized)
+        continue
+
+    flat_bg_color = get_bg_color(flat, rect=flat_bounding_rect)
     # flat_bg_color = (256, 256, 256)
     bg_pixels = np.all(flat[:,:]==np.array(flat_bg_color), axis=2)
     keyed_flat = np.copy(flat)
     keyed_flat[bg_pixels]=(255,255,255)
-    flat_bounding_rect = getBoundingRect(keyed_flat)
+    flat_bounding_rect2 = getBoundingRect(keyed_flat)
+    show_rect("keyed_flat", keyed_flat, flat_bounding_rect2)
+
+    ground_rect = getBoundingRect(ground)
+    show_rect("ground", ground, ground_rect)
 
 
+    cv2.waitKey(0)
+    
     resized_flat = np.zeros((desiredHeight,desiredWidth,3), np.uint8)
     resized_flat[:,:] = flat_bg_color 
 
@@ -142,7 +174,9 @@ for index in range(0, len(data),2):
     crop_resized = cv2.resize(cropped, (w, h), interpolation=cv2.INTER_LINEAR_EXACT)
 
     resized_flat[y:y+h,x:x+w] = crop_resized
+    resized_flat = mult_mask(resized_flat, mask)
 
+    # cv2.imwrite(f'formatted/view/{baseName}_flat.png', resized_flat)
     cv2.imwrite(f'formatted/view/{baseName}_flat.png', resized_flat)
 
 
