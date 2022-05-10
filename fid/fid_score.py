@@ -82,6 +82,7 @@ class ImagePathDataset(torch.utils.data.Dataset):
     def __getitem__(self, i):
         path = self.files[i]
         img = Image.open(path).convert('RGB')
+        img = img.resize((512,512))
         if self.transforms is not None:
             img = self.transforms(img)
         return img
@@ -228,7 +229,7 @@ def calculate_activation_statistics(files, model, batch_size=50, dims=2048,
     return mu, sigma
 
 
-def compute_statistics_of_path(path, model, batch_size, dims, device,
+def compute_statistics_of_path(path, model, batch_size, dims, device, glob_str,
                                num_workers=1):
     if path.endswith('.npz'):
         with np.load(path) as f:
@@ -236,14 +237,15 @@ def compute_statistics_of_path(path, model, batch_size, dims, device,
     else:
         path = pathlib.Path(path)
         files = sorted([file for ext in IMAGE_EXTENSIONS
-                       for file in path.glob('*.{}'.format(ext))])
+                       for file in path.glob(glob_str.format(ext))])
+        # print(files)
         m, s = calculate_activation_statistics(files, model, batch_size,
                                                dims, device, num_workers)
 
     return m, s
 
 
-def calculate_fid_given_paths(paths, batch_size, device, dims, num_workers=1):
+def calculate_fid_given_paths(paths, batch_size=50, device='cuda', dims=2048, num_workers=1):
     """Calculates the FID of two paths"""
     for p in paths:
         if not os.path.exists(p):
@@ -253,10 +255,11 @@ def calculate_fid_given_paths(paths, batch_size, device, dims, num_workers=1):
 
     model = InceptionV3([block_idx]).to(device)
 
+
     m1, s1 = compute_statistics_of_path(paths[0], model, batch_size,
-                                        dims, device, num_workers)
+                                        dims, device, '*fake*.{}', num_workers)
     m2, s2 = compute_statistics_of_path(paths[1], model, batch_size,
-                                        dims, device, num_workers)
+                                        dims, device,  '*.{}', num_workers)
     fid_value = calculate_frechet_distance(m1, s1, m2, s2)
 
     return fid_value
