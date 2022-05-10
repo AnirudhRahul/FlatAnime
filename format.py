@@ -42,7 +42,7 @@ def pad_images(inp, out, num_paddings):
 
 def affine_images(inp, out, num_affines):
     random_seed = random.randint(0, 1000)
-    affine = T.RandomAffine(degrees=(-20, 20), translate=(0, 0.12), scale=(0.7, 1))
+    affine = T.RandomAffine(degrees=(-5, 5), translate=(0, 0.12), scale=(0.7, 1))
     affined_inp = []
     torch.manual_seed(random_seed)
     for img in inp:
@@ -54,10 +54,28 @@ def affine_images(inp, out, num_affines):
         affined_out.extend([affine(img) for _ in range(num_affines)])
     return affined_inp, affined_out
 
+def huerotate_images(inp, out, num_affines):
+    random_seed = random.randint(0, 1000)
+    
+    jitter = T.ColorJitter(hue=0.5)
+    affined_inp = []
+    torch.manual_seed(random_seed)
+    for img in inp:
+        affined_inp.append(img)
+        affined_inp.extend([jitter(img) for _ in range(num_affines)])
+        
+    torch.manual_seed(random_seed)
+    affined_out = []
+    for img in out:
+        affined_out.append(img)
+        affined_out.extend([jitter(img) for _ in range(num_affines)])
+    return affined_inp, affined_out
+
 def mutliplyImages(inp, out):
-    inp, out = pad_images(inp, out, 3)
-    inp, out = affine_images(inp, out, 6)
-    # print(len(inp), len(out))
+    inp, out = pad_images(inp, out, 2)
+    inp, out = affine_images(inp, out, 3)
+    inp, out = huerotate_images(inp, out, 2)
+        
     return inp, out
 
 
@@ -78,6 +96,6 @@ def saveData(data, inp_dir, out_dir):
         index+=1
         
 
-saveData(extended_training_data, "formatted/in/train", "formatted/out/train")
+saveData(extended_training_data, "extended_with_huemodify/in/train", "extended_with_huemodify/out/train")
 
-saveData(test_data, "formatted/in/test", "formatted/out/test")
+saveData(test_data, "extended_with_huemodify/in/test", "extended_with_huemodify/out/test")
