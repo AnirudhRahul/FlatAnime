@@ -26,7 +26,7 @@ training_samples = round(training_proportion * len(data))
 random.shuffle(data)
 
 training_data = data[:training_samples]
-test_data = data[training_samples:]
+test_data = data[:]
 
 
 def pad_images(inp, out, num_paddings):
@@ -72,18 +72,18 @@ def huerotate_images(inp, out, num_affines):
     return affined_inp, affined_out
 
 def mutliplyImages(inp, out):
-    inp, out = pad_images(inp, out, 2)
-    inp, out = affine_images(inp, out, 3)
-    inp, out = huerotate_images(inp, out, 2)
+    # inp, out = pad_images(inp, out, 2)
+    # inp, out = affine_images(inp, out, 3)
+    # inp, out = huerotate_images(inp, out, 2)
         
     return inp, out
 
 
 extended_training_data = training_data[:]
 
-for ground, flat in training_data:
-    exp_ground, exp_flat = mutliplyImages([ground], [flat])
-    extended_training_data.extend(zip(exp_ground, exp_flat))
+# for ground, flat in training_data:
+#     exp_ground, exp_flat = mutliplyImages([ground], [flat])
+#     extended_training_data.extend(zip(exp_ground, exp_flat))
 
 print(len(extended_training_data))
 
@@ -96,6 +96,6 @@ def saveData(data, inp_dir, out_dir):
         index+=1
         
 
-saveData(extended_training_data, "extended_with_huemodify/in/train", "extended_with_huemodify/out/train")
+saveData(extended_training_data, "Base/in/train", "Base/out/train")
 
-saveData(test_data, "extended_with_huemodify/in/test", "extended_with_huemodify/out/test")
+saveData(test_data, "Base/in/test", "Base/out/test")
