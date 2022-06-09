@@ -1,7 +1,9 @@
 # FlatAnime
 *Anime Image translation to Minimalist Theme* by Anirudh Rahul
 
-The current image to image machine learning models such as style transfer models, seem to have promising applications in the arts. The goal of this project to apply traditional image to image learning methods on novel anime image dataset, to speicfically study the effectiveness of different image to image techniques for anime style images.
+Current image to image machine learning models such as style transfer models, seem to have promising applications in the arts especially when it comes to artforms such as paintings and photos. 
+
+The goal of this project to explore the application of traditional image to image learning techniques on an anime image dataset, to speicfically study the effectiveness of different image to image techniques for anime style images.
 
 
 ## Preliminary Results
